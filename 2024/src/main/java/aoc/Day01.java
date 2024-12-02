@@ -30,7 +30,7 @@ public class Day01 {
         right.forEach(num -> countsRight.merge(num, 1, Integer::sum));
 
         int resultP2 = left.stream()
-            .mapToInt(num -> num *= countsRight.getOrDefault(num, 0))
+            .mapToInt(num -> num * countsRight.getOrDefault(num, 0))
             .sum();
         System.out.println(resultP2);
     }
