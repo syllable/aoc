@@ -25,7 +25,7 @@ public class Day02 {
           }
 
           for (int excludeIdx = 0; excludeIdx < level.length; ++excludeIdx) {
-            // brute force with array copy (otherwise keep track of skipIdx in isLevelSafe?)
+            // brute force with array copy
             int[] withOneSkipped = copyExceptOne(level, excludeIdx);
             if (isLevelSafe(withOneSkipped)) {
               return true;
@@ -45,9 +45,6 @@ public class Day02 {
     return copy;
   }
 
-  /**
-   * @return unsafe idx.
-   */
   private static boolean isLevelSafe(int[] level) {
     boolean lineIsIncreasing = level[1] > level[0];
     for (int i = 1; i < level.length; ++i) {
