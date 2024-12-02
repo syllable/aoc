@@ -9,35 +9,25 @@ import java.util.List;
 public class Day02 {
 
   public static void main(String[] args) throws IOException {
-    List<int[]> lines = read();
+    List<int[]> levels = read();
 
-    var count = lines.stream()
-        .filter(level -> {
-          boolean lineIsIncreasing = level[1] > level[0];
-          for (int i = 1; i < level.length; ++i) {
-            boolean isIncreasing = level[i] > level[i - 1];
-            int diff = Math.abs(level[i] - level[i - 1]);
-            if (lineIsIncreasing != isIncreasing || diff < 1 || diff > 3) {
-              return false;
-            }
-          }
-          return true;
-        })
+    var count = levels.stream()
+        .filter(Day02::isLevelSafe)
         .count();
     System.out.println(count);
 
     // p2
-    var count2 = lines.stream()
+    var count2 = levels.stream()
         .filter(level -> {
 
-          int unsafeIdx = getUnsafeIdx(level);
-          if (unsafeIdx == -1) {
+          if (isLevelSafe(level)) {
             return true;
           }
 
-          for (int i = 0; i < level.length; ++i) {
-            int[] withOneSkipped = copyExceptOne(level, i);
-            if (getUnsafeIdx(withOneSkipped) == -1) {
+          for (int excludeIdx = 0; excludeIdx < level.length; ++excludeIdx) {
+            // brute force with array copy (otherwise keep track of skipIdx in isLevelSafe?)
+            int[] withOneSkipped = copyExceptOne(level, excludeIdx);
+            if (isLevelSafe(withOneSkipped)) {
               return true;
             }
           }
@@ -55,16 +45,19 @@ public class Day02 {
     return copy;
   }
 
-  private static int getUnsafeIdx(int[] level) {
+  /**
+   * @return unsafe idx.
+   */
+  private static boolean isLevelSafe(int[] level) {
     boolean lineIsIncreasing = level[1] > level[0];
     for (int i = 1; i < level.length; ++i) {
       boolean isIncreasing = level[i] > level[i - 1];
       int diff = Math.abs(level[i] - level[i - 1]);
       if (lineIsIncreasing != isIncreasing || diff < 1 || diff > 3) {
-        return i;
+        return false;
       }
     }
-    return -1;
+    return true;
   }
 
   private static List<int[]> read() throws IOException {
