@@ -48,9 +48,9 @@ public class Day02 {
   private static boolean isLevelSafe(int[] level) {
     boolean lineIsIncreasing = level[1] > level[0];
     for (int i = 1; i < level.length; ++i) {
-      boolean isIncreasing = level[i] > level[i - 1];
+      boolean stepIsIncreasing = level[i] > level[i - 1];
       int diff = Math.abs(level[i] - level[i - 1]);
-      if (lineIsIncreasing != isIncreasing || diff < 1 || diff > 3) {
+      if (lineIsIncreasing != stepIsIncreasing || diff < 1 || diff > 3) {
         return false;
       }
     }
