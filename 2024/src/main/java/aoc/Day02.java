@@ -1,5 +1,7 @@
 package aoc;
 
+import static test.Assert.assertEquals;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,13 +13,14 @@ public class Day02 {
   public static void main(String[] args) throws IOException {
     List<int[]> levels = read();
 
-    var count = levels.stream()
+    long count = levels.stream()
         .filter(Day02::isLevelSafe)
         .count();
     System.out.println(count);
+    assertEquals(502, count, "Part1");
 
     // p2
-    var count2 = levels.stream()
+    long count2 = levels.stream()
         .filter(level -> {
 
           if (isLevelSafe(level)) {
@@ -36,6 +39,7 @@ public class Day02 {
         })
         .count();
     System.out.println(count2);
+    assertEquals(544, count2, "Part2");
   }
 
   private static int[] copyExceptOne(int[] array, int excludeIdx) {
