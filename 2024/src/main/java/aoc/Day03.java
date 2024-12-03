@@ -34,31 +34,22 @@ public class Day03 {
 
     // P2
 
-    // idea: find the closest instruction to the left of current mul() match by remembering do()/dont'() indices
-    Matcher doInstr = Pattern.compile("do\\(\\)").matcher(data);
-    Matcher dontInstr = Pattern.compile("don't\\(\\)").matcher(data);
-    List<Integer> doIdxs = new ArrayList<>();
-    List<Integer> dontIdxs = new ArrayList<>();
-
-    while (doInstr.find()) {
-      doIdxs.add(doInstr.start());
-    }
-    while (dontInstr.find()) {
-      dontIdxs.add(dontInstr.start());
-    }
-    doIdxs.sort(Collections.reverseOrder());
-    dontIdxs.sort(Collections.reverseOrder());
-
-    var matcher2 = m.matcher(data);
+    Matcher matcher2 = Pattern.compile("mul\\((\\d+),(\\d+)\\)|do\\(\\)|don't\\(\\)").matcher(data);
     int sum2 = 0;
+
+    boolean execNextMul = true;
     while (matcher2.find()) {
-      int start = matcher2.start();
-      Integer prevDont = dontIdxs.stream().filter(idx -> idx < start).findFirst().orElse(-1);
-      Integer prevDo = doIdxs.stream().filter(idx -> idx < start).findFirst().orElse(0); // do wins if both empty: "At the beginning of the program, mul instructions are enabled."
-      if (prevDo > prevDont) {
+      String word = matcher2.group(0);
+      if (word.equals("do()")) {
+        execNextMul = true;
+      } else if (word.equals("don't()")) {
+        execNextMul = false;
+      } else if (execNextMul) {
         var int1 = Integer.parseInt(matcher2.group(1));
         var int2 = Integer.parseInt(matcher2.group(2));
         sum2 += (int1 * int2);
+      } else {
+        // ignore mul
       }
     }
     System.out.println(sum2);
