@@ -53,17 +53,6 @@ public class Day04 {
   }
 
   private static int countXmasPart2(List<String> lines) {
-
-    /*
-    M.S
-    .A.
-    M.S
-     */
-    /*
-    S.S
-    .A.
-    M.M
-     */
     int rows = lines.size();
     int cols = lines.getFirst().length();
 
@@ -129,8 +118,13 @@ public class Day04 {
 
     int rows = lines.size();
     int cols = lines.getFirst().length();
-    assertTrue(rows >= cols, "rows >= cols handled");
+    assertTrue(rows >= cols, "rows >= cols handled"); // puzzle input is even rows=cols
 
+    // A B C
+    // D E F
+    // G H I
+
+    // 1. get all diagonals starting at row 0: AEI BF C
     for (int startCol = 0; startCol < cols; ++startCol) {
       int r = 0;
       int c = startCol;
@@ -143,6 +137,9 @@ public class Day04 {
       result.add(sb.toString());
     }
 
+    // 2. leaves one diagonal per subsequent row (starting at col 0) since all others are already start at row 0
+    // DH
+    // G
     for (int startRow = 1; startRow < rows; ++startRow) {
       int r = startRow;
       int c = 0;
