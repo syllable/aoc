@@ -14,8 +14,13 @@ public class Day04 {
 
   public static void main(String[] args) throws IOException {
 
-    List<String> lines = Files.readAllLines(Path.of("input/day4.txt"));
+    List<String> lines = Files.readAllLines(Path.of("input/day4_full.txt"));
+    part1(lines);
+    part2(lines);
+  }
 
+  static void part1(List<String> lines) {
+    System.out.println("-- Part 1");
     int count = 0;
     List<String> diag = diag(lines);
     List<String> diag2 = diag(lines.stream().map(l -> new StringBuilder(l).reverse().toString()).toList());
@@ -40,8 +45,54 @@ public class Day04 {
     System.out.println(count);
   }
 
+  private static void part2(List<String> lines) {
+    System.out.println("-- Part 2");
+
+    int count = countXmasPart2(lines);
+    System.out.println(count);
+  }
+
+  private static int countXmasPart2(List<String> lines) {
+
+    /*
+    M.S
+    .A.
+    M.S
+     */
+    /*
+    S.S
+    .A.
+    M.M
+     */
+    int rows = lines.size();
+    int cols = lines.getFirst().length();
+
+    int count = 0;
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols; ++col) {
+        if (col + 2 > (cols-1) || row + 2 > (rows-1)) {
+          continue;
+        }
+
+        boolean midA = lines.get(row+1).charAt(col+1) == 'A';
+        boolean diag1 = (lines.get(row).charAt(col) == 'M' && lines.get(row+2).charAt(col+2) == 'S')
+            || (lines.get(row).charAt(col) == 'S' && lines.get(row+2).charAt(col+2) == 'M');
+        boolean diag2 = (lines.get(row).charAt(col+2) == 'M' && lines.get(row+2).charAt(col) == 'S')
+            || (lines.get(row).charAt(col+2) == 'S' && lines.get(row+2).charAt(col) == 'M');
+
+
+        if (midA && diag1 && diag2) {
+          ++count;
+        }
+      }
+    }
+
+    return count;
+  }
+
   private static final Pattern XMAS = Pattern.compile("XMAS");
   private static final Pattern SAMX = Pattern.compile("SAMX");
+
   private static int countXmas(List<String> lines) {
     int count = 0;
     for (String line : lines) {
