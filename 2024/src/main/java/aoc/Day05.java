@@ -1411,6 +1411,9 @@ public class Day05 {
 
         // read rules to weight numbers?
         // e.g. 47 before 53
+
+
+
         List<String> input = Arrays.asList(x.split("\n"));
         Set<String> rules = input.stream()
                 .takeWhile(p -> p.contains("|"))
@@ -1424,7 +1427,11 @@ public class Day05 {
         System.out.println(rules);
         System.out.println(updates);
 
+        // todo: rank ints 0-100 by rules first?
+        //  but does it handle "missing rules" (partial ordering)
         List<String> ok = new ArrayList<>();
+        List<String> nok = new ArrayList<>();
+
         for (String update : updates) {
             List<String> pages = Arrays.asList(update.split(","));
             boolean updateOk = true;
@@ -1448,17 +1455,38 @@ public class Day05 {
             }
             if (updateOk) {
                 ok.add(update);
+            } else {
+                nok.add(update);
             }
         }
-
-        System.out.println(ok);
 
         var res = ok.stream()
                 .map(o -> o.split(","))
                 .map(a -> a[a.length / 2])
-                .mapToInt(o -> Integer.parseInt(o))
+                .mapToInt(Integer::parseInt)
                 .sum();
 
+        // p1 full = 6951
         System.out.println(res);
+
+
+
+        // p2 full = ??
+        System.out.println("nok--");
+        int sumNok = 0;
+        for (var update : nok) {
+            List<String> up = Arrays.asList(update.split(","));
+            up.sort(Comparator.comparing(Function.identity(), (a, b) -> {
+                if (rules.contains(a + "|" + b)) {
+                    return -1;
+                } else if (rules.contains(b + "|" + a)) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }));
+            sumNok += Integer.parseInt(up.get(up.size() / 2));
+        }
+        System.out.println(sumNok);
     }
 }
