@@ -20,7 +20,7 @@ import static test.Assert.assertTrue;
 public class Day05 {
 
     public static void main(String[] args) throws IOException {
-        String x = Files.readString(Path.of("input/day5_full.txt"));
+        String x = Files.readString(Path.of("input/day5.txt"));
         // 143
 
 
