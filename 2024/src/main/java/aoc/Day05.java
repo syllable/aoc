@@ -21,18 +21,6 @@ public class Day05 {
 
     public static void main(String[] args) throws IOException {
         String x = Files.readString(Path.of("input/day5.txt"));
-        // 143
-
-
-
-        // 47|53 :
-        // 47 before 53
-
-        // read rules to weight numbers?
-        // e.g. 47 before 53
-
-
-
         List<String> input = Arrays.asList(x.split("\n"));
         Set<String> rules = input.stream()
                 .takeWhile(p -> p.contains("|"))
@@ -92,7 +80,7 @@ public class Day05 {
         int sumP2 = 0;
         for (var update : nok) {
             List<String> up = Arrays.asList(update.split(","));
-            up.sort(Comparator.comparing(Function.identity(), (a, b) -> {
+            up.sort((a, b) -> {
                 if (rules.contains(a + "|" + b)) {
                     return -1;
                 } else if (rules.contains(b + "|" + a)) {
@@ -100,7 +88,7 @@ public class Day05 {
                 } else {
                     return 0;
                 }
-            }));
+            });
             sumP2 += Integer.parseInt(up.get(up.size() / 2));
         }
         System.out.println(sumP2);
