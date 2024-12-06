@@ -3,7 +3,6 @@ package aoc;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -11,24 +10,23 @@ import static test.Assert.assertEquals;
 
 public class Day06 {
 
-    private record Point(int x, int y) {}
-    private record Position(int x, int y, char d) {
+    private record Position(int x, int y, char direction) {
         Position moveInDirection() {
-            return switch (this.d()) {
+            return switch (this.direction()) {
                 case '^' -> new Position(x, y-1, '^');
                 case 'v' -> new Position(x, y+1, 'v');
                 case '<' -> new Position(x-1, y, '<');
                 case '>' -> new Position(x+1, y, '>');
-                default -> throw new IllegalStateException("Unexpected value: " + this.d());
+                default -> throw new IllegalStateException("Unexpected value: " + this.direction());
             };
         }
-        Position turn90Right() {
-            return switch (this.d()) {
-                case '^' -> new Position(x, y, '>');
-                case 'v' -> new Position(x, y, '<');
-                case '<' -> new Position(x, y, '^');
-                case '>' -> new Position(x, y, 'v');
-                default -> throw new IllegalStateException("Unexpected value: " + this.d());
+        char turn90Right() {
+            return switch (this.direction()) {
+                case '^' -> '>';
+                case 'v' -> '<';
+                case '<' -> '^';
+                case '>' -> 'v';
+                default -> throw new IllegalStateException("Unexpected value: " + this.direction());
             };
         }
     }
@@ -36,7 +34,6 @@ public class Day06 {
     private static final char OBSTACLE = '#';
     private static final char WALKABLE = '.';
     private static final char VISITED = 'X';
-    private static final List<Character> POSITION_INDICATORS = List.of('^', 'v', '<', '>');
 
     private static char[][] readMap(Path path) throws Exception {
         String[] lines = Files.readAllLines(path).toArray(new String[0]);
@@ -59,7 +56,9 @@ public class Day06 {
 
         // -- Part 1
         char[][] p1 = copy(map);
-        walkUntilLeaveOrLoop(p1);
+        Position startPosition = Objects.requireNonNull(findPosition(map), "start position not found");
+
+        walkUntilLeaveOrLoop(p1, startPosition);
         int countP1 = 0;
         for (int y = 0; y < map.length; y++) {
             for (int x = 0; x < map[0].length; ++x) {
@@ -68,6 +67,7 @@ public class Day06 {
                 }
             }
         }
+
         System.out.println(countP1);
         assertEquals(5531, countP1);
 
@@ -78,49 +78,48 @@ public class Day06 {
                 if (map[y][x] == WALKABLE) {
                     char[][] copy = copy(map);
                     copy[y][x] = OBSTACLE;
-                    walkUntilLeaveOrLoop(copy);
-                    if (findPosition(copy) != null) {
+                    boolean loop = walkUntilLeaveOrLoop(copy, startPosition);
+                    if (loop) {
                         ++countP2;
                     }
                 }
             }
         }
+
         System.out.println(countP2);
         assertEquals(2165, countP2);
     }
 
-    private static void walkUntilLeaveOrLoop(char[][] map) {
+
+
+    private static boolean walkUntilLeaveOrLoop(char[][] map, final Position startPosition) {
 
         int xMax = map[0].length - 1;
         int yMax = map.length - 1;
 
-        Position position = Objects.requireNonNull(findPosition(map), "no start position found");
-        map[position.x][position.y] = VISITED;
+        Position currentPosition = startPosition;
 
         Set<Position> visitedPositions = new HashSet<>();
-        visitedPositions.add(position);
+        visitedPositions.add(currentPosition);
 
-        int steps = 0;
         while (true) {
-            ++steps;
-            Position maybeNext = position.moveInDirection();
+            Position maybeNext = currentPosition.moveInDirection();
             if (maybeNext.x() > xMax || maybeNext.x() < 0 || maybeNext.y() > yMax || maybeNext.y() < 0) {
-                map[position.y()][position.x()] = 'X';
-                break;
+                map[currentPosition.y()][currentPosition.x()] = VISITED;
+                return false;
             }
             char element = map[maybeNext.y()][maybeNext.x()];
 
             if (element == OBSTACLE) {
-                position = position.turn90Right();
-                map[position.y()][position.x()] = position.d();
-            } else if (element == WALKABLE || element == VISITED) {
-                map[position.y()][position.x()] = 'X';
-                map[maybeNext.y()][maybeNext.x()] = maybeNext.d();
+                currentPosition = new Position(currentPosition.x(), currentPosition.y(), currentPosition.turn90Right());
+                map[currentPosition.y()][currentPosition.x()] = currentPosition.direction();
+            } else {
+                map[currentPosition.y()][currentPosition.x()] = VISITED;
+                map[maybeNext.y()][maybeNext.x()] = maybeNext.direction();
 
-                position = maybeNext;
-                boolean newPosition = visitedPositions.add(position);
-                if (!newPosition) {
-                    break;
+                currentPosition = maybeNext;
+                if (element == VISITED && !visitedPositions.add(currentPosition)) {
+                    return true;
                 }
             }
         }
@@ -130,7 +129,7 @@ public class Day06 {
         for (int y = 0; y < map.length; y++) {
             for (int x = 0; x < map[y].length; x++) {
                 char c = map[y][x];
-                if (POSITION_INDICATORS.contains(c)) {
+                if (c != OBSTACLE && c!= WALKABLE && c!= VISITED) {
                     return new Position(x, y, c);
                 }
             }
