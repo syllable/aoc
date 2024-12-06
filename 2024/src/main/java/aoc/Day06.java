@@ -2,9 +2,16 @@ package aoc;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.StructuredTaskScope;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 
 import static test.Assert.assertEquals;
 
@@ -55,42 +62,51 @@ public class Day06 {
         char[][] map = readMap(Path.of("input/day6.txt"));
 
         // -- Part 1
-        char[][] p1 = copy(map);
         Position startPosition = Objects.requireNonNull(findPosition(map), "start position not found");
 
-        walkUntilLeaveOrLoop(p1, startPosition);
+        walkUntilLeaveOrLoop(map, startPosition);
         int countP1 = 0;
         for (int y = 0; y < map.length; y++) {
             for (int x = 0; x < map[0].length; ++x) {
-                if (p1[y][x] == 'X') {
+                if (map[y][x] == 'X') {
                     ++countP1;
                 }
             }
         }
 
-        System.out.println(countP1);
+        System.out.println("Part 1" + countP1);
         assertEquals(5531, countP1);
 
         // -- Part 2
-        int countP2 = 0;
-        for (int y = 0; y < map.length; y++) {
-            for (int x = 0; x < map[0].length; ++x) {
-                if (map[y][x] == WALKABLE) {
-                    char[][] copy = copy(map);
-                    copy[y][x] = OBSTACLE;
-                    boolean loop = walkUntilLeaveOrLoop(copy, startPosition);
-                    if (loop) {
-                        ++countP2;
+        long start = System.nanoTime();
+
+        List<StructuredTaskScope.Subtask<Boolean>> tasks = new ArrayList<>();
+        long countP2;
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+            for (int y = 0; y < map.length; y++) {
+                for (int x = 0; x < map[0].length; ++x) {
+                    if (map[y][x] == VISITED) { // re-use map from part1 to only place obstacle on reachable place
+                        int yy = y;
+                        int xx = x;
+                        tasks.add(scope.fork(() -> {
+                            char[][] copy = copy(map);
+                            copy[yy][xx] = OBSTACLE;
+                            return walkUntilLeaveOrLoop(copy, startPosition);
+                        }));
                     }
                 }
             }
+            scope.join().throwIfFailed();
+            countP2 = tasks.stream().filter(o -> Boolean.TRUE.equals(o.get())).count();
         }
 
-        System.out.println(countP2);
+        long stop = System.nanoTime();
+
+        System.out.println("Part 2: " + countP2);
         assertEquals(2165, countP2);
+
+        System.out.println("Part 2 took " + TimeUnit.NANOSECONDS.toMillis( (stop - start)) + " ms");
     }
-
-
 
     private static boolean walkUntilLeaveOrLoop(char[][] map, final Position startPosition) {
 
