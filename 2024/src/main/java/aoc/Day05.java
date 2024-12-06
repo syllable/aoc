@@ -1,21 +1,15 @@
 package aoc;
 
+import static test.Assert.assertEquals;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static test.Assert.assertEquals;
-import static test.Assert.assertTrue;
 
 public class Day05 {
 
@@ -35,7 +29,7 @@ public class Day05 {
         System.out.println(updates);
 
         // todo: rank ints 0-100 by rules first?
-        //  but does it handle "missing rules" (partial ordering)
+        //  but does it handle "missing rules" (partial ordering?)
         List<String> ok = new ArrayList<>();
         List<String> nok = new ArrayList<>();
 
