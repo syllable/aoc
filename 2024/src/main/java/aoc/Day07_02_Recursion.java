@@ -95,8 +95,21 @@ public class Day07_02_Recursion {
         return switch (op) {
             case '+' -> l1 + l2;
             case '*' -> l1 * l2;
-            case '|' -> Long.parseLong("" + l1 + l2);
+            case '|' -> concat(l1, l2);
             default -> throw new IllegalStateException("Unexpected operator: " + op);
         };
+    }
+
+    private static long concat(long l1, long l2) {
+        // 12
+        //   501
+        // 12*10^3 501
+        int m = 1;
+        long l = l2;
+        while (l >= 1) {
+            m *= 10;
+            l /= 10;
+        }
+        return l1 * m + l2;
     }
 }
