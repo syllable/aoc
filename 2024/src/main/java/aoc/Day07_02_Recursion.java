@@ -3,14 +3,19 @@ package aoc;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.StructuredTaskScope;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
 
 import static test.Assert.assertEquals;
 import static test.Util.time;
 
 public class Day07_02_Recursion {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         String exampleInput = """
                 190: 10 19
                 3267: 81 40 27
@@ -35,7 +40,7 @@ public class Day07_02_Recursion {
         );
     }
 
-    private static void run(List<String> lines, long expectedP2) {
+    private static int run(List<String> lines, long expectedP2) throws Exception {
 
         List<Day07.Equation> equations = lines.stream()
                 .map(line -> {
@@ -47,18 +52,23 @@ public class Day07_02_Recursion {
 
 
         long p2 = 0;
-        for (var eq : equations) {
-            boolean matches =
-                    acc(eq.values(), eq.result(), 0, 0, '*')
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+            List<StructuredTaskScope.Subtask<Long>> tasks = new ArrayList<>();
+            for (var eq : equations) {
+                tasks.add(scope.fork(() -> {
+                    var match = acc(eq.values(), eq.result(), 0, 0, '*')
                             || acc(eq.values(), eq.result(), 0, 0, '+')
                             || acc(eq.values(), eq.result(), 0, 0, '|');
-            if (matches) {
-                p2 += eq.result();
+                    return match ? eq.result() : 0;
+                }));
             }
+            scope.join().throwIfFailed();
+            p2 = tasks.stream().mapToLong(StructuredTaskScope.Subtask::get).sum();
         }
 
         System.out.println(p2);
         assertEquals(expectedP2, p2);
+        return 0;
     }
 
     private static boolean acc(
@@ -68,8 +78,6 @@ public class Day07_02_Recursion {
             int nextOperandIdx,
             char operand
     ) {
-        // 7290: 6, 8, 6, 15
-
         if (nextOperandIdx == input.size()) {
             return accumulator == expectedResult;
         }
