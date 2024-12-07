@@ -9,9 +9,10 @@ import java.util.Collections;
 import java.util.List;
 
 import static test.Assert.assertEquals;
+import static test.Util.time;
 
 public class Day07 {
-    private record Equation(long result, List<Integer> values) {
+    record Equation(long result, List<Integer> values) {
     }
 
     public static void main(String[] args) throws IOException {
@@ -27,8 +28,12 @@ public class Day07 {
                 292: 11 6 16 20
                 """;
 
+        System.out.println("-- Example Input");
         run(Arrays.asList(exampleInput.split("\n")), 3749L, 11387L);
-        run(Files.readAllLines(Path.of("input/day7.txt")), 1260333054159L, 162042343638683L);
+
+        System.out.println("-- Full Input");
+        List<String> lines = Files.readAllLines(Path.of("input/day7.txt"));
+        time(() -> run(lines, 1260333054159L, 162042343638683L), "P2");
     }
 
     private static void run(List<String> lines, long expectedP1, long expectedP2) {
