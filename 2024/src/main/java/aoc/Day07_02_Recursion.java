@@ -1,15 +1,11 @@
 package aoc;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.StructuredTaskScope;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.function.Function;
 
 import static test.Assert.assertEquals;
 import static test.Util.time;
@@ -56,9 +52,7 @@ public class Day07_02_Recursion {
             List<StructuredTaskScope.Subtask<Long>> tasks = new ArrayList<>();
             for (var eq : equations) {
                 tasks.add(scope.fork(() -> {
-                    var match = acc(eq.values(), eq.result(), 0, 0, '*')
-                            || acc(eq.values(), eq.result(), 0, 0, '+')
-                            || acc(eq.values(), eq.result(), 0, 0, '|');
+                    boolean match = matches(eq);
                     return match ? eq.result() : 0;
                 }));
             }
@@ -71,24 +65,30 @@ public class Day07_02_Recursion {
         return 0;
     }
 
-    private static boolean acc(
+    private static boolean matches(Day07.Equation eq) {
+        return matches(eq.values(), eq.result(), 0, 0, '+')
+                || matches(eq.values(), eq.result(), 0, 0, '*')
+                || matches(eq.values(), eq.result(), 0, 0, '|');
+    }
+
+    private static boolean matches(
             List<Integer> input,
             long expectedResult,
             long accumulator,
             int nextOperandIdx,
-            char operand
+            char operator
     ) {
         if (nextOperandIdx == input.size()) {
             return accumulator == expectedResult;
         }
 
         long prevAccumulator = accumulator;
-        accumulator = eval(accumulator, input.get(nextOperandIdx), operand);
+        accumulator = eval(accumulator, input.get(nextOperandIdx), operator);
         // System.out.println("Eval: " + prevAccumulator + operand + input.get(nextOperandIdx) + "=" + accumulator);
 
-        return acc(input, expectedResult, accumulator, nextOperandIdx + 1, '+')
-                || acc(input, expectedResult, accumulator, nextOperandIdx + 1, '*')
-                || acc(input, expectedResult, accumulator, nextOperandIdx + 1, '|');
+        return matches(input, expectedResult, accumulator, nextOperandIdx + 1, '+')
+                || matches(input, expectedResult, accumulator, nextOperandIdx + 1, '*')
+                || matches(input, expectedResult, accumulator, nextOperandIdx + 1, '|');
     }
 
     private static long eval(long l1, long l2, char op) {
