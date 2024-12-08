@@ -38,26 +38,18 @@ public class Day07_02_Recursion {
 
     private static int run(List<String> lines, long expectedP2) throws Exception {
 
-        List<Day07.Equation> equations = lines.stream()
-                .map(line -> {
-                    long result = Long.parseLong(line.substring(0, line.indexOf(':')));
-                    List<Integer> values = Arrays.stream(line.substring(line.indexOf(":") + 2).split(" ")).map(Integer::parseInt).toList();
-                    return new Day07.Equation(result, values);
-                })
-                .toList();
-
-
         long p2 = 0;
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-            List<StructuredTaskScope.Subtask<Long>> tasks = new ArrayList<>();
-            for (var eq : equations) {
-                tasks.add(scope.fork(() -> {
-                    boolean match = matches(eq);
-                    return match ? eq.result() : 0;
-                }));
+        for (var line : lines) {
+            long result = Long.parseLong(line.substring(0, line.indexOf(':')));
+            List<Integer> values = Arrays.stream(line.substring(line.indexOf(":") + 2).split(" ")).map(Integer::parseInt).toList();
+            var eq = new Day07.Equation(result, values);
+
+            boolean match
+                    // = matches(eq, eq.values().getFirst(), 1);
+                    = matchesRTL(eq, eq.result(), eq.values().size() - 1, '0');
+            if (match) {
+                p2 += eq.result();
             }
-            scope.join().throwIfFailed();
-            p2 = tasks.stream().mapToLong(StructuredTaskScope.Subtask::get).sum();
         }
 
         System.out.println(p2);
@@ -65,42 +57,103 @@ public class Day07_02_Recursion {
         return 0;
     }
 
-    private static boolean matches(Day07.Equation eq) {
-        return matches(eq.values(), eq.result(), 0, 0, '+')
-                || matches(eq.values(), eq.result(), 0, 0, '*')
-                || matches(eq.values(), eq.result(), 0, 0, '|');
-    }
-
     private static boolean matches(
-            List<Integer> input,
-            long expectedResult,
+            Day07.Equation eq,
             long accumulator,
-            int nextOperandIdx,
-            char operator
+            int nextOperandIdx
     ) {
-        if (nextOperandIdx == input.size()) {
+        long expectedResult = eq.result();
+        List<Integer> values = eq.values();
+        if (nextOperandIdx == values.size()) {
             return accumulator == expectedResult;
         }
 
-        long prevAccumulator = accumulator;
-        accumulator = eval(accumulator, input.get(nextOperandIdx), operator);
-        // System.out.println("Eval: " + prevAccumulator + operand + input.get(nextOperandIdx) + "=" + accumulator);
-
-        return matches(input, expectedResult, accumulator, nextOperandIdx + 1, '+')
-                || matches(input, expectedResult, accumulator, nextOperandIdx + 1, '*')
-                || matches(input, expectedResult, accumulator, nextOperandIdx + 1, '|');
+        int next = values.get(nextOperandIdx);
+        return matches(eq, accumulator + next, nextOperandIdx + 1)
+                || matches(eq, accumulator * next, nextOperandIdx + 1)
+                || matches(eq, concat(accumulator, next), nextOperandIdx + 1);
     }
 
-    private static long eval(long l1, long l2, char op) {
-        return switch (op) {
-            case '+' -> l1 + l2;
-            case '*' -> l1 * l2;
-            case '|' -> concat(l1, l2);
-            default -> throw new IllegalStateException("Unexpected operator: " + op);
-        };
+    private static boolean matchesRTL(
+            Day07.Equation equation,
+            long accumulator,
+            int nextOperandIdx,
+            char lastOp
+    ) {
+        List<Integer> input = equation.values();
+        if (nextOperandIdx == -1) {
+            return (lastOp == '/' && accumulator == 1) || (lastOp != '/' && accumulator == 0);
+        }
+
+        Integer next = input.get(nextOperandIdx);
+        if (accumulator % next == 0) {
+            if (matchesRTL(equation, accumulator / next, nextOperandIdx - 1, '/')) {
+                return true;
+            }
+        }
+        if (accumulator > next) {
+            if (matchesRTL(equation, accumulator - next, nextOperandIdx - 1, '-')) {
+                return true;
+            }
+        }
+
+        // 150129
+        //    129
+        // 150000
+        // 150
+
+        // String acc = String.valueOf(accumulator);
+        // String nxt = String.valueOf(next);
+        // if (acc.endsWith(nxt)) {
+        //     int idx = acc.lastIndexOf(nxt);
+        //     long nextAcc = idx == 0 ? 0 : Long.parseLong(acc.substring(0, idx));
+        //     return matchesRTL(equation, nextAcc, nextOperandIdx - 1, '|');
+        // }
+
+        long diff = accumulator - next;
+        long diffTrailingZeros = countTrailingZerosBase10(diff);
+        if (diffTrailingZeros > 0) {
+            int nextDigits = countDigitsBase10(next);
+            if (diffTrailingZeros >= nextDigits) {
+                long nextAcc = removeTrailingZerosBase10(diff, nextDigits);
+                return matchesRTL(equation, nextAcc, nextOperandIdx - 1, '|');
+            }
+        }
+
+        return false;
+    }
+
+    static long countTrailingZerosBase10(long l) {
+        long c = 0;
+        while (l % 10 == 0 && l != 0) {
+            ++c;
+            l /= 10;
+        }
+        return c;
+    }
+
+    static int countDigitsBase10(long l) {
+        int d = 1;
+        while ((l /= 10) > 0) {
+            ++d;
+        }
+        return d;
+    }
+
+    static long removeTrailingZerosBase10(long l, int digits) {
+        for (int i = 0; i < digits; ++i) {
+            if (l % 10 == 0) {
+                l /= 10;
+            } else {
+                break;
+            }
+        }
+        return l;
     }
 
     private static long concat(long l1, long l2) {
+        // return Long.parseLong("" + l1 + l2);
+
         // 12
         //   501
         // 12*10^3 501
