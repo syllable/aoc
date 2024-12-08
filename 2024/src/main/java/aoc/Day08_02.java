@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+import static test.Assert.assertEquals;
+
 public class Day08_02 {
 
     public static void main(String[] args) throws Exception {
@@ -51,13 +53,10 @@ public class Day08_02 {
                                 if (otherAntenna == antenna) {
 
                                     antiNodeMap[oy][ox] = '#'; // other antenna counts as antinode too
+
                                     int ax = ox;
                                     int ay = oy;
-
-                                    while (checkBound(map, ax + dx, ay + dy)) {
-                                        ax += dx;
-                                        ay += dy;
-
+                                    while (checkBound(map, ax += dx, ay += dy)) {
                                         antiNodeMap[ay][ax] = '#';
 
                                         // visual only since antinode must is not on map if antenna in same location
@@ -84,6 +83,7 @@ public class Day08_02 {
         }
 
         System.out.println("Part 2: " + countP2);
+        assertEquals(1308, countP2);
     }
 
     private static boolean checkBound(char[][] map, int x, int y) {
