@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+import static test.Assert.assertEquals;
+
 public class Day10 {
 
     public static void main(String[] args) throws IOException {
@@ -52,6 +54,7 @@ public class Day10 {
             }
         }
         System.out.println("P1 = " + sumP1);
+        assertEquals(737, sumP1);
 
         int sumP2 = 0;
         for (int y = 0; y < lines.size(); y++) {
@@ -63,6 +66,7 @@ public class Day10 {
             }
         }
         System.out.println("P2 = " + sumP2);
+        assertEquals(1619, sumP2);
     }
 
     private static int walk(int[][] map, int x, int y, boolean countAlreadyReached9) {
