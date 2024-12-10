@@ -19,7 +19,8 @@ public class Day10 {
                 01329801
                 10456732
                 """;
-        // 5, 6, 5, 3, 1, 3, 5, 3, and 5 (=36)
+        // p1: 5, 6, 5, 3, 1, 3, 5, 3, and 5 (=36)
+        // p2: 81
 
         List<String> lines =
                 // Arrays.asList(input.split("\n"));
@@ -30,6 +31,7 @@ public class Day10 {
 
     static void run(List<String> lines) {
 
+        // P1
         int[][] map = new int[lines.size()][lines.getFirst().length()];
         for (int y = 0; y < lines.size(); y++) {
             for (int x = 0; x < lines.getFirst().length(); x++) {
@@ -44,45 +46,58 @@ public class Day10 {
         for (int y = 0; y < lines.size(); y++) {
             for (int x = 0; x < lines.getFirst().length(); x++) {
                 if (map[y][x] == 0) {
-                    int walk = walk(copy(map), x, y);
+                    int walk = walk(copy(map), x, y, true);
                     sumP1 += walk;
                 }
             }
         }
         System.out.println("P1 = " + sumP1);
+
+        int sumP2 = 0;
+        for (int y = 0; y < lines.size(); y++) {
+            for (int x = 0; x < lines.getFirst().length(); x++) {
+                if (map[y][x] == 0) {
+                    int walk = walk(copy(map), x, y, false);
+                    sumP2 += walk;
+                }
+            }
+        }
+        System.out.println("P2 = " + sumP2);
     }
 
-    private static int walk(int[][] map, int x, int y) {
+    private static int walk(int[][] map, int x, int y, boolean countAlreadyReached9) {
         if (!checkBound(map, x, y)) {
             throw new AssertionError();
         }
 
         int current = map[y][x];
         if (current == 9) {
-            map[y][x] = 100; // mark as reached to avoid duplicates (todo: another way?)
+            if (countAlreadyReached9) {
+                map[y][x] = 100; // mark as reached to avoid duplicates for P1
+            }
             return 1;
         }
 
         int res = 0;
         if (checkBound(map, x - 1, y)
                 && map[y][x - 1] == current + 1) {
-            res += walk(map, x - 1, y);
+            res += walk(map, x - 1, y, countAlreadyReached9);
         }
 
         if (checkBound(map, x + 1, y)
             && map[y][x + 1] == current + 1
         ) {
-            res += walk(map, x + 1, y);
+            res += walk(map, x + 1, y, countAlreadyReached9);
         }
 
         if (checkBound(map, x, y - 1)
             && map[y - 1][x] == current + 1) {
-            res += walk(map, x, y - 1);
+            res += walk(map, x, y - 1, countAlreadyReached9);
         }
 
         if (checkBound(map, x, y + 1)
             && map[y + 1][x] == current + 1) {
-            res += walk(map, x, y + 1);
+            res += walk(map, x, y + 1, countAlreadyReached9);
         }
 
         return res;
