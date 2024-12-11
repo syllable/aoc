@@ -1,14 +1,13 @@
 package aoc;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.StructuredTaskScope;
+import java.util.Map;
 
 import static test.Assert.assertEquals;
 
@@ -16,64 +15,62 @@ public class Day11 {
 
     public static void main(String[] args) throws Exception {
 
-        String input = "125 17";
-        // p1: 5, 6, 5, 3, 1, 3, 5, 3, and 5 (=36)
-        // p2: 81
 
-        input = Files.readString(Path.of("input/" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase() + ".txt"));
+        List<String> example = List.of("125", "17");
+        assertEquals(22, solve(example, 6));
+        assertEquals(55312, solve(example, 25));
+
+
+        String input = Files.readString(Path.of("input/" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase() + ".txt"));
         List<String> stones = Arrays.asList(input.split(" "));
 
-        var l1 = run(new ArrayList<>(stones), 25);
+        long l1 = solve(stones, 25);
         System.out.println(l1);
         assertEquals(186175, l1);
 
-        var l2 = run(new ArrayList<>(stones), 25);
+        long l2 = solve(stones, 75);
         System.out.println(l2);
+        assertEquals(220566831337810L, l2);
     }
 
-    static long run(List<String> lines, int iterations) throws Exception {
+    private static long solve(List<String> stones, int iterations) {
+        Map<String, Long> stoneToCount = new HashMap<>();
 
-
-        System.out.println(lines);
-        long sum = 0;
-
-        for (int stoneIdx = 0; stoneIdx < lines.size(); ++stoneIdx) {
-
-            long start = System.nanoTime();
-
-            List<String> st = new ArrayList<>();
-            st.add(lines.get(stoneIdx));
-
-            for (int i = 0; i < iterations; ++i) {
-
-                for (int j = 0; j < st.size(); ++j) {
-
-                    String stone = st.get(j);
-                    if (stone.equals("0")) {
-                        st.set(j, "1");
-                    } else if (stone.length() % 2 == 0) {
-                        String firstHalf = stone.substring(0, stone.length() / 2);
-                        String secondHalf = stone.substring(stone.length() / 2);
-
-                        firstHalf = String.valueOf(Integer.parseInt(firstHalf));
-                        st.set(j, firstHalf);
-                        secondHalf = String.valueOf(Integer.parseInt(secondHalf));
-                        st.add(j + 1, secondHalf);
-                        ++j;
-                    } else {
-                        long val = Long.parseLong(stone);
-                        long res = Math.multiplyExact(val, 2024L);
-                        st.set(j, String.valueOf(res));
-                    }
-                }
-            }
-
-            var stop = System.nanoTime();
-            System.out.println(stoneIdx + " took " + Duration.ofNanos(stop - start));
-
-            sum += st.size();
+        for (var stone : stones) {
+            stoneToCount.merge(stone, 1L, Long::sum);
         }
 
-        return sum;
+        for (int i = 0; i < iterations; i++) {
+
+            // 5688 becomes 56 88
+            // -> if we have n x 5688, we get n x 56 and n x 88 in the next iteration
+
+            Map<String, Long> itStoneToCount = new HashMap<>();
+            for (var entry : stoneToCount.entrySet()) {
+                String stone = entry.getKey();
+                long count = entry.getValue();
+
+                if (stone.equals("0")) {
+                    itStoneToCount.merge("1", count, Long::sum);
+                } else if (stone.length()%2 == 0) {
+                    String firstHalf = stone.substring(0, stone.length() / 2);
+                    String secondHalf = stone.substring(stone.length() / 2);
+                    firstHalf = String.valueOf(Integer.parseInt(firstHalf));
+                    secondHalf = String.valueOf(Integer.parseInt(secondHalf));
+                    itStoneToCount.merge(firstHalf, count, Long::sum);
+                    itStoneToCount.merge(secondHalf, count, Long::sum);
+                } else {
+                    long value = Long.parseLong(stone) * 2024L;
+                    itStoneToCount.merge(String.valueOf(value), count, Long::sum);
+                }
+            }
+            stoneToCount = itStoneToCount;
+
+        }
+        System.out.println(stoneToCount);
+
+        return stoneToCount.values().stream()
+                .mapToLong(l -> l)
+                .sum();
     }
 }
