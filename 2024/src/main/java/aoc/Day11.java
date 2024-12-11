@@ -1,20 +1,20 @@
 package aoc;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.StructuredTaskScope;
 
 import static test.Assert.assertEquals;
 
 public class Day11 {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         String input = "125 17";
         // p1: 5, 6, 5, 3, 1, 3, 5, 3, and 5 (=36)
@@ -23,49 +23,57 @@ public class Day11 {
         input = Files.readString(Path.of("input/" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase() + ".txt"));
         List<String> stones = Arrays.asList(input.split(" "));
 
-        var l1 = run(stones, 25);
+        var l1 = run(new ArrayList<>(stones), 25);
         System.out.println(l1);
-        assertEquals(
-                186175, l1
-        );
+        assertEquals(186175, l1);
 
-        var l2 = run(stones, 30);
+        var l2 = run(new ArrayList<>(stones), 25);
         System.out.println(l2);
     }
 
-    static int run(List<String> lines, int iterations) {
+    static long run(List<String> lines, int iterations) throws Exception {
 
-        List<String> stones = lines;
-        System.out.println(stones);
-        long s = 0;
-        for (int i = 0; i < iterations; ++i) {
-            stones = applyRules(stones);
 
-            System.out.println("#" + i + " stones: " + stones.size());
-        }
-        return stones.size();
-    }
+        System.out.println(lines);
+        long sum = 0;
 
-    private static List<String> applyRules(List<String> stones) {
-        List<String> newList = new ArrayList<>();
+        for (int stoneIdx = 0; stoneIdx < lines.size(); ++stoneIdx) {
 
-        for (String stone : stones) {
-            if (stone.equals("0")) {
-                newList.add("1");
-            } else if (stone.length() % 2 == 0) {
-                String firstHalf = stone.substring(0, stone.length() / 2);
-                String secondHalf = stone.substring(stone.length() / 2);
+            long start = System.nanoTime();
 
-                newList.add(String.valueOf(Integer.parseInt(firstHalf))); // long?
-                newList.add(String.valueOf(Integer.parseInt(secondHalf)));
+            List<String> st = new ArrayList<>();
+            st.add(lines.get(stoneIdx));
 
-            } else {
-                long val = Long.parseLong(stone);
-                long res = Math.multiplyExact(val, 2024L);
-                newList.add(String.valueOf(res));
+            for (int i = 0; i < iterations; ++i) {
+
+                for (int j = 0; j < st.size(); ++j) {
+
+                    String stone = st.get(j);
+                    if (stone.equals("0")) {
+                        st.set(j, "1");
+                    } else if (stone.length() % 2 == 0) {
+                        String firstHalf = stone.substring(0, stone.length() / 2);
+                        String secondHalf = stone.substring(stone.length() / 2);
+
+                        firstHalf = String.valueOf(Integer.parseInt(firstHalf));
+                        st.set(j, firstHalf);
+                        secondHalf = String.valueOf(Integer.parseInt(secondHalf));
+                        st.add(j + 1, secondHalf);
+                        ++j;
+                    } else {
+                        long val = Long.parseLong(stone);
+                        long res = Math.multiplyExact(val, 2024L);
+                        st.set(j, String.valueOf(res));
+                    }
+                }
             }
+
+            var stop = System.nanoTime();
+            System.out.println(stoneIdx + " took " + Duration.ofNanos(stop - start));
+
+            sum += st.size();
         }
 
-        return newList;
+        return sum;
     }
 }
